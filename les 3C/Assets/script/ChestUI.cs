@@ -1,33 +1,78 @@
 using UnityEngine;
+using System.Collections.Generic;
 
 public class ChestUI : MonoBehaviour
 {
-    [Header("Configuration")]
-    public GameObject canvasPanel; // Le panneau principal à activer
-    public Transform slotContainer; // L'endroit où les cases vont apparaître (Grid Layout)
-    public GameObject slotPrefab; // Le bouton Prefab à copier
+    // Instance statique pour y accéder facilement depuis le script Chest.cs
+    public static ChestUI Instance;
 
-    public void Open(Chest chest)
+    [Header("Configuration UI")]
+    public GameObject slotPrefab;   // Ton Prefab de bouton d'inventaire
+    public Transform container;     // Le dossier (Content) dans ton UI
+    public GameObject uiPanel;      // Le panneau parent à afficher/masquer
+
+    // Variable CRUCIALE : On stocke ici le coffre que l'on est en train de piller
+    private Chest currentChest;
+
+    private void Awake()
     {
-        canvasPanel.SetActive(true);
+        // Système de Singleton pour appeler ChestUI.Instance.OpenChest()
+        if (Instance == null) Instance = this;
+        else Destroy(gameObject);
 
-        // 1. On nettoie l'interface (on supprime les anciens objets)
-        foreach (Transform child in slotContainer)
+        // On cache l'UI au démarrage
+        if (uiPanel != null) uiPanel.SetActive(false);
+    }
+
+    /// <summary>
+    /// Appelé par le script Chest du monde pour ouvrir cette fenêtre.
+    /// </summary>
+    public void OpenChest(Chest chestData)
+    {
+        currentChest = chestData; // On enregistre le coffre envoyé en paramètre
+        
+        if (uiPanel != null) uiPanel.SetActive(true);
+        
+        // On débloque la souris pour pouvoir cliquer
+        Cursor.lockState = CursorLockMode.None;
+        Cursor.visible = true;
+
+        RefreshUI();
+    }
+
+    public void CloseChest()
+    {
+        if (uiPanel != null) uiPanel.SetActive(false);
+
+        currentChest = null;
+
+        Cursor.lockState = CursorLockMode.Locked;
+        Cursor.visible = false;
+
+        Time.timeScale = 1f;
+    }
+
+    public void RefreshUI()
+    {
+        if (currentChest == null) return;
+
+        // 1. On vide l'affichage actuel (pour ne pas doubler les items)
+        foreach (Transform child in container)
         {
             Destroy(child.gameObject);
         }
 
-        // 2. On crée une case pour chaque objet dans le coffre
-        foreach (InventoryItem item in chest.items)
+        // 2. On crée un bouton pour chaque objet dans la liste du coffre
+        foreach (InventoryItem item in currentChest.items)
         {
-            GameObject go = Instantiate(slotPrefab, slotContainer);
-            InventorySlotUI slot = go.GetComponent<InventorySlotUI>();
-            slot.Setup(item);
-        }
-    }
+            GameObject newSlot = Instantiate(slotPrefab, container);
+            InventorySlotUI slotScript = newSlot.GetComponent<InventorySlotUI>();
 
-    public void Close()
-    {
-        canvasPanel.SetActive(false);
+            if (slotScript != null)
+            {
+                // ON PASSE : L'item, le Mode Coffre, et LE COFFRE ACTUEL
+                slotScript.Setup(item, InventorySlotUI.SlotType.Chest, currentChest);
+            }
+        }
     }
 }

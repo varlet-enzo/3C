@@ -3,37 +3,108 @@ using UnityEngine.UI;
 
 public class InventorySlotUI : MonoBehaviour
 {
+    // Définition des modes du bouton
+    public enum SlotType { Chest, Player }
+    
+    [Header("Configuration")]
+    public SlotType currentType;
+
     [Header("Composants UI")]
     public Image icon;
-    public Text nameText; // Remplace par TMP_Text si tu utilises TextMeshPro
-    public Text amountText; // Remplace par TMP_Text si tu utilises TextMeshPro
+    public Text amountText; 
+    public Text NameText; 
 
-    private InventoryItem currentItem; // On mémorise l'objet contenu dans cette case
+    // Données internes
+    private InventoryItem currentItem;
+    private Chest chestSource;
 
-    // Remplissage visuel de la case
-    public void Setup(InventoryItem item)
+    /// <summary>
+    /// Configure la case avec ses données et son comportement.
+    /// </summary>
+    /// <param name="item">L'objet à afficher</param>
+    /// <param name="type">Vient-il d'un coffre ou du joueur ?</param>
+    /// <param name="source">Le script Chest d'origine (optionnel)</param>
+    public void Setup(InventoryItem item, SlotType type, Chest source = null)
     {
-        currentItem = item; // On sauvegarde la donnée
-        
-        icon.sprite = item.itemData.icon;
-        if (nameText != null) nameText.text = item.itemData.displayName;
-        if (amountText != null) amountText.text = "x" + item.amount.ToString();
+        currentItem = item;
+        currentType = type;
+        chestSource = source;
+
+        // Mise à jour du visuel
+        if (icon != null && item.itemData != null)
+        {
+            icon.sprite = item.itemData.icon;
+        }
+
+        if (amountText != null)
+        {
+            amountText.text = "x" + item.amount.ToString();
+        }
+
+        if (NameText != null)
+        {
+            NameText.text = item.itemData.displayName;
+        }
     }
 
-    // Fonction appelée par le composant Button de Unity (On Click)
+    /// <summary>
+    /// Fonction appelée par le composant Button (On Click)
+    /// </summary>
     public void OnClick()
     {
-        // On vérifie que le joueur existe bien
-        if (PlayerInventory.Instance != null && currentItem != null)
+        if (currentItem == null) return;
+
+        if (currentType == SlotType.Chest)
         {
-            // 1. On envoie l'objet au joueur
+            HandleChestClick();
+        }
+        else
+        {
+            HandlePlayerClick();
+        }
+    }
+
+    // --- LOGIQUE COFFRE ---
+    private void HandleChestClick()
+    {
+        // 1. On donne l'objet au joueur
+        if (PlayerInventory.Instance != null)
+        {
             PlayerInventory.Instance.AddItem(currentItem.itemData, currentItem.amount);
-            
-            // 2. On détruit le bouton visuel du coffre (l'objet a été pris)
+            Debug.Log($"📦 {currentItem.itemData.displayName} ajouté à l'inventaire joueur.");
+        }
+
+        // 2. On le retire de la LISTE RÉELLE du coffre pour qu'il ne réapparaisse pas
+        if (chestSource != null)
+        {
+            chestSource.items.Remove(currentItem);
+        }
+
+        // 3. On détruit le bouton visuel
+        Destroy(gameObject);
+    }
+
+    // --- LOGIQUE INVENTAIRE JOUEUR ---
+    private void HandlePlayerClick()
+    {
+        Debug.Log($"✨ Utilisation de {currentItem.itemData.displayName} depuis l'inventaire.");
+
+        // Exemple simple : on consomme 1 exemplaire
+        currentItem.amount--;
+
+        if (currentItem.amount <= 0)
+        {
+            // On retire l'objet de la liste du joueur s'il n'y en a plus
+            if (PlayerInventory.Instance != null)
+            {
+                PlayerInventory.Instance.items.Remove(currentItem);
+            }
             Destroy(gameObject);
-            
-            // Note : Pour un système complet, il faudrait aussi retirer l'objet 
-            // de la liste du script Chest.cs, mais on commence simple !
+        }
+        else
+        {
+            // On met à jour le texte si l'objet reste
+            if (amountText != null) amountText.text = "x" + currentItem.amount.ToString();
         }
     }
 }

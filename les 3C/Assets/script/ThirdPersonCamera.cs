@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using UnityEngine.InputSystem;
 
 [RequireComponent(typeof(Camera))]
 public class ThirdPersonCamera : MonoBehaviour
@@ -20,6 +21,12 @@ public class ThirdPersonCamera : MonoBehaviour
     private float rotY;
     private bool isInitialized = false;
     private bool inputEnabled = true;
+    private PlayerInput playerInput;
+    private InputAction moveAction;
+    private InputAction lookAction;
+
+    public Vector3 PlanarForward => Quaternion.Euler(0f, rotX, 0f) * Vector3.forward;
+    public Vector3 PlanarRight => Quaternion.Euler(0f, rotX, 0f) * Vector3.right;
 
     void OnEnable() { SceneManager.sceneLoaded += OnSceneLoaded; }
     void OnDisable() { SceneManager.sceneLoaded -= OnSceneLoaded; }
@@ -40,10 +47,31 @@ public class ThirdPersonCamera : MonoBehaviour
             if (player != null)
             {
                 target = player.transform;
+                CacheInputActions();
                 InitializeCameraPosition();
             }
         }
-        else { InitializeCameraPosition(); }
+        else
+        {
+            CacheInputActions();
+            InitializeCameraPosition();
+        }
+    }
+
+    void CacheInputActions()
+    {
+        if (target == null) return;
+
+        playerInput = target.GetComponent<PlayerInput>();
+        if (playerInput == null || playerInput.actions == null)
+        {
+            moveAction = null;
+            lookAction = null;
+            return;
+        }
+
+        moveAction = playerInput.actions["Move"];
+        lookAction = playerInput.actions["Look"];
     }
 
     void InitializeCameraPosition()
@@ -61,10 +89,21 @@ public class ThirdPersonCamera : MonoBehaviour
         if (target == null) return;
         if (!isInitialized) { InitializeCameraPosition(); return; }
 
+        if (playerInput == null || moveAction == null || lookAction == null)
+        {
+            CacheInputActions();
+        }
+
+        Vector2 moveInput = moveAction != null ? moveAction.ReadValue<Vector2>() : Vector2.zero;
+        Vector2 lookInput = lookAction != null ? lookAction.ReadValue<Vector2>() : Vector2.zero;
+
+        float moveX = moveInput.x;
+        float moveZ = moveInput.y;
+
         if (inputEnabled)
         {
-            float mouseX = Input.GetAxisRaw("Mouse X");
-            float mouseY = Input.GetAxisRaw("Mouse Y");
+            float mouseX = lookInput.x;
+            float mouseY = lookInput.y;
 
             if (Mathf.Abs(mouseX) > 0.1f || Mathf.Abs(mouseY) > 0.1f)
             {
@@ -75,8 +114,8 @@ public class ThirdPersonCamera : MonoBehaviour
             }
             else
             {
-                // AUTO-ALIGNEMENT : Si le joueur avance et ne touche pas à la souris
-                HandleAutoAlign();
+                // Auto-alignement seulement si le joueur avance vers l'avant.
+                HandleAutoAlign(moveX, moveZ);
             }
         }
 
@@ -86,11 +125,12 @@ public class ThirdPersonCamera : MonoBehaviour
         transform.LookAt(target.position + Vector3.up * 1.5f);
     }
 
-    void HandleAutoAlign()
+    void HandleAutoAlign(float moveX, float moveZ)
     {
-        // On vérifie si le joueur est en train de se déplacer (via sa vélocité ou son input)
-        // Ici, on regarde si le temps écoulé depuis le dernier mouvement de souris est suffisant
-        if (Time.time - lastInputTime > alignDelay)
+        bool isMovingForward = moveZ > 0.1f;
+        bool isStrafing = Mathf.Abs(moveX) > 0.1f;
+
+        if (isMovingForward && !isStrafing && Time.time - lastInputTime > alignDelay)
         {
             // On récupère l'angle actuel du joueur
             float targetRotationY = target.eulerAngles.y;

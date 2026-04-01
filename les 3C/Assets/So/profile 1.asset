@@ -1,0 +1,33 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f6bf8fff86dd0564f89fa0dee16b16d2, type: 3}
+  m_Name: profile 1
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerProfileSO
+  maxHealth: 100
+  maxMana: 50
+  manaRegenPerSec: 2
+  healthRegenPerSec: 1
+  moveSpeed: 6
+  sprintSpeed: 10
+  crouchSpeed: 3
+  walkSpeed: 6
+  rollSpeed: 15
+  jumpHeight: 1.5
+  gravity: -9.81
+  rollDuration: 0.5
+  rollDistance: 5
+  rollCooldown: 1
+  canMoveWhileRolling: 0
+  baseDamage: 20
+  attackRange: 2
+  attackCooldown: 0.5
+  inputActions: {fileID: 0}

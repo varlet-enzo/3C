@@ -272,12 +272,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ThirdPersonCamera
   target: {fileID: 1145229830}
   offset: {x: 0, y: 1.8, z: -5}
-  sensitivity: 2
+  sensitivity: 0.87
   distance: 7
   minY: -30
   maxY: 60
   alignSpeed: 12
-  alignDelay: 1.8
+  alignDelay: 4
 --- !u!114 &330585549
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -725,8 +725,9 @@ GameObject:
   - component: {fileID: 1145229834}
   - component: {fileID: 1145229833}
   - component: {fileID: 1145229832}
+  - component: {fileID: 1145229835}
   m_Layer: 0
-  m_Name: Capsule
+  m_Name: Player
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -745,7 +746,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::HealthSystem
   isPlayer: 1
-  profile: {fileID: 0}
+  profile: {fileID: 11400000, guid: b459b966ba3a52f4bba1ca0d4e35da8f, type: 2}
   currentHealth: 0
   maxMana: 50
   currentMana: 0
@@ -776,7 +777,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b0e5ab0b067e3284490e212447631304, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerController
-  profile: {fileID: 0}
+  profile: {fileID: 11400000, guid: b459b966ba3a52f4bba1ca0d4e35da8f, type: 2}
   enemyLayer:
     serializedVersion: 2
     m_Bits: 0
@@ -785,6 +786,10 @@ MonoBehaviour:
     m_Bits: 192
   playerCamera: {fileID: 330585546}
   lookSensitivity: 50
+  idleResetTime: 4
+  resetSmoothSpeed: 3
+  playerAlignDelay: 1
+  playerAlignSpeed: 8
 --- !u!143 &1145229826
 CharacterController:
   m_ObjectHideFlags: 0
@@ -809,7 +814,7 @@ CharacterController:
   m_StepOffset: 0.3
   m_SkinWidth: 0.08
   m_MinMoveDistance: 0.001
-  m_Center: {x: 0, y: 0, z: 0}
+  m_Center: {x: 0, y: -0.72, z: 0}
 --- !u!136 &1145229827
 CapsuleCollider:
   m_ObjectHideFlags: 0
@@ -830,9 +835,9 @@ CapsuleCollider:
   m_Enabled: 1
   serializedVersion: 2
   m_Radius: 0.5
-  m_Height: 2
+  m_Height: 2.1247077
   m_Direction: 1
-  m_Center: {x: 0, y: 0, z: 0}
+  m_Center: {x: 0, y: -0.5497787, z: 0}
 --- !u!23 &1145229828
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -889,7 +894,7 @@ MeshFilter:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1145229823}
-  m_Mesh: {fileID: 10208, guid: 0000000000000000e000000000000000, type: 0}
+  m_Mesh: {fileID: 6349497404779363362, guid: 1b7720f8ff674eb4ba65dacb93ed2bcd, type: 3}
 --- !u!4 &1145229830
 Transform:
   m_ObjectHideFlags: 0
@@ -899,7 +904,7 @@ Transform:
   m_GameObject: {fileID: 1145229823}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 6.24, y: 1.58, z: 6.15}
+  m_LocalPosition: {x: 5.654, y: 1.748, z: 6.049}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -1156,6 +1161,28 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PlayerInventoryUI
   inventoryCanvas: {fileID: 1968591913}
   display: {fileID: 1145229832}
+--- !u!95 &1145229835
+Animator:
+  serializedVersion: 7
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1145229823}
+  m_Enabled: 1
+  m_Avatar: {fileID: 0}
+  m_Controller: {fileID: 9100000, guid: 4455e1295afc21540ae85dfa7ae3624f, type: 2}
+  m_CullingMode: 0
+  m_UpdateMode: 0
+  m_ApplyRootMotion: 0
+  m_LinearVelocityBlending: 0
+  m_StabilizeFeet: 0
+  m_AnimatePhysics: 0
+  m_WarningMessage: 
+  m_HasTransformHierarchy: 1
+  m_AllowConstantClipSamplingOptimization: 1
+  m_KeepAnimatorStateOnDisable: 0
+  m_WriteDefaultValuesOnDisable: 0
 --- !u!1 &1241283891
 GameObject:
   m_ObjectHideFlags: 0
@@ -1525,9 +1552,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6993e5b5c9ccc35428073ddb5a37aa40, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ChestUI
-  canvasPanel: {fileID: 1281314017}
-  slotContainer: {fileID: 734933967}
   slotPrefab: {fileID: 5270307004824227529, guid: 6f80232785d7b2044997f17b5fc2a944, type: 3}
+  container: {fileID: 734933967}
+  uiPanel: {fileID: 1281314017}
 --- !u!1 &1375598504
 GameObject:
   m_ObjectHideFlags: 0
@@ -1584,8 +1611,8 @@ MonoBehaviour:
   m_ChildAlignment: 4
   m_StartCorner: 0
   m_StartAxis: 0
-  m_CellSize: {x: 80, y: 80}
-  m_Spacing: {x: 70, y: 70}
+  m_CellSize: {x: 120, y: 120}
+  m_Spacing: {x: 90, y: 90}
   m_Constraint: 0
   m_ConstraintCount: 2
 --- !u!1 &1506964678

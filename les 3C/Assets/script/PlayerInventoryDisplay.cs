@@ -26,7 +26,7 @@ public class PlayerInventoryDisplay : MonoBehaviour
             
             if (slot != null)
             {
-                slot.Setup(item);
+                slot.Setup(item, InventorySlotUI.SlotType.Player);
             }
         }
     }

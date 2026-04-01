@@ -23,6 +23,13 @@ public class PlayerController : MonoBehaviour
     public float resetSmoothSpeed = 3f;
     private float lastLookTime; 
 
+    [Header("Auto-Alignement Joueur")]
+    [Tooltip("Temps sans deplacement avant de realigner le joueur")]
+    public float playerAlignDelay = 1.0f;
+    [Tooltip("Vitesse de rotation du joueur vers la camera")]
+    public float playerAlignSpeed = 8f;
+    private float lastMoveTime;
+
     // Variables de mouvement synchronisées
     private float moveSpeed = 6f;
     private float sprintSpeed = 10f;
@@ -55,6 +62,8 @@ public class PlayerController : MonoBehaviour
     private float nextAttackTime;
     private float xRotation = 0f;
     private Transform cam;
+    private ThirdPersonCamera thirdPersonCamera;
+    private bool hasWarnedMissingCamera;
     
     private Chest lastDetectedChest; 
 
@@ -63,13 +72,35 @@ public class PlayerController : MonoBehaviour
         controller = GetComponent<CharacterController>();
         animator = GetComponent<Animator>();
         lastLookTime = Time.time;
+        lastMoveTime = Time.time;
 
         if (profile != null) ApplyProfile();
         if (Camera.main != null) cam = Camera.main.transform;
+        thirdPersonCamera = FindFirstObjectByType<ThirdPersonCamera>();
 
         // On bloque le curseur pour le confort
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
+    }
+
+    Transform GetMovementReference()
+    {
+        if (thirdPersonCamera == null)
+        {
+            thirdPersonCamera = FindFirstObjectByType<ThirdPersonCamera>();
+        }
+
+        if (thirdPersonCamera != null) return thirdPersonCamera.transform;
+        if (Camera.main != null) return Camera.main.transform;
+        if (playerCamera != null) return playerCamera;
+
+        if (!hasWarnedMissingCamera)
+        {
+            Debug.LogWarning("[PlayerController] Aucune camera de reference trouvee. Le mouvement utilisera la rotation du joueur.");
+            hasWarnedMissingCamera = true;
+        }
+
+        return transform;
     }
     
     void ApplyProfile()
@@ -136,7 +167,19 @@ public class PlayerController : MonoBehaviour
 
     public void OnInteract(InputAction.CallbackContext context)
     {
-        if (context.started) Interact();
+        if (context.started) 
+        {
+            // 1. On vérifie si le coffre est déjà ouvert
+            if (ChestUI.Instance != null && ChestUI.Instance.uiPanel.activeSelf)
+            {
+                // Si oui, on le ferme et on arrête la fonction ici
+                ChestUI.Instance.CloseChest();
+                return; 
+            }
+    
+            // 2. Si le menu était fermé, on exécute l'interaction normale
+            Interact();
+        }
     }
 
     // ==================== LOGIQUE UPDATE ====================
@@ -162,11 +205,43 @@ public class PlayerController : MonoBehaviour
         CheckForInteractable();
         ApplyLook(); 
         MoveWithInput();
+        HandleIdlePlayerAlign();
         ApplyGravity();
+    }
+
+    void HandleIdlePlayerAlign()
+    {
+        bool hasMoveInput = moveInput.sqrMagnitude > 0.01f;
+        if (hasMoveInput)
+        {
+            lastMoveTime = Time.time;
+            return;
+        }
+
+        if (Time.time - lastMoveTime < playerAlignDelay) return;
+        if (isRolling) return;
+
+        Vector3 alignForward;
+        if (thirdPersonCamera != null)
+        {
+            alignForward = thirdPersonCamera.PlanarForward;
+        }
+        else
+        {
+            Transform reference = GetMovementReference();
+            alignForward = Vector3.ProjectOnPlane(reference.forward, Vector3.up);
+        }
+
+        if (alignForward.sqrMagnitude < 0.001f) return;
+
+        float targetAngle = Mathf.Atan2(alignForward.x, alignForward.z) * Mathf.Rad2Deg;
+        Quaternion targetRotation = Quaternion.Euler(0f, targetAngle, 0f);
+        transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, playerAlignSpeed * Time.deltaTime);
     }
 
     void ApplyLook()
     {
+        if (thirdPersonCamera != null) return;
         if (playerCamera == null) return;
 
         // Si on est inactif depuis plus de X secondes
@@ -194,16 +269,35 @@ public class PlayerController : MonoBehaviour
 
     void MoveWithInput()
     {
-        Vector3 dir = new Vector3(moveInput.x, 0, moveInput.y);
+        Vector3 camForward;
+        Vector3 camRight;
+
+        if (thirdPersonCamera != null)
+        {
+            camForward = thirdPersonCamera.PlanarForward;
+            camRight = thirdPersonCamera.PlanarRight;
+        }
+        else
+        {
+            Transform reference = GetMovementReference();
+            camForward = Vector3.ProjectOnPlane(reference.forward, Vector3.up);
+            camRight = Vector3.ProjectOnPlane(reference.right, Vector3.up);
+        }
+
+        if (camForward.sqrMagnitude < 0.001f) camForward = transform.forward;
+        if (camRight.sqrMagnitude < 0.001f) camRight = transform.right;
+
+        camForward.Normalize();
+        camRight.Normalize();
+        Vector3 dir = (camRight * moveInput.x + camForward * moveInput.y);
 
         if (dir.sqrMagnitude > 0.01f)
         {
-            // Calcul de l'angle basé sur la caméra
-            float targetAngle = Mathf.Atan2(dir.x, dir.z) * Mathf.Rad2Deg + (cam != null ? cam.eulerAngles.y : 0f);
-            Vector3 moveDir = Quaternion.Euler(0, targetAngle, 0) * Vector3.forward;
+            float targetAngle = Mathf.Atan2(dir.x, dir.z) * Mathf.Rad2Deg;
+            Vector3 moveDir = dir.normalized;
 
             float currentSpeed = isSprinting ? sprintSpeed : (isCrouching ? crouchSpeed : walkSpeed);
-            controller.Move(moveDir.normalized * currentSpeed * Time.deltaTime);
+            controller.Move(moveDir * currentSpeed * Time.deltaTime);
 
             // AUTO-ALIGNEMENT : On tourne le corps vers la direction de marche
             Quaternion targetRotation = Quaternion.Euler(0, targetAngle, 0);
@@ -289,11 +383,30 @@ public class PlayerController : MonoBehaviour
         rollCooldownTimer = rollCooldown;
         rollDistanceTraveled = 0f;
 
-        Vector3 dir = new Vector3(moveInput.x, 0, moveInput.y);
+        Vector3 camForward;
+        Vector3 camRight;
+
+        if (thirdPersonCamera != null)
+        {
+            camForward = thirdPersonCamera.PlanarForward;
+            camRight = thirdPersonCamera.PlanarRight;
+        }
+        else
+        {
+            Transform reference = GetMovementReference();
+            camForward = Vector3.ProjectOnPlane(reference.forward, Vector3.up);
+            camRight = Vector3.ProjectOnPlane(reference.right, Vector3.up);
+        }
+
+        if (camForward.sqrMagnitude < 0.001f) camForward = transform.forward;
+        if (camRight.sqrMagnitude < 0.001f) camRight = transform.right;
+
+        camForward.Normalize();
+        camRight.Normalize();
+        Vector3 dir = (camRight * moveInput.x + camForward * moveInput.y);
         if (dir.sqrMagnitude > 0.1f)
         {
-            float targetAngle = Mathf.Atan2(dir.x, dir.z) * Mathf.Rad2Deg + (cam != null ? cam.eulerAngles.y : 0f);
-            rollDirection = Quaternion.Euler(0, targetAngle, 0) * Vector3.forward;
+            rollDirection = dir.normalized;
         }
         else rollDirection = transform.forward;
 

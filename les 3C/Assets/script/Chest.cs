@@ -21,6 +21,7 @@ public class Chest : MonoBehaviour, IInteractable
     {
         if (!isOpen) OpenChest();
         else CloseChest();
+        ChestUI.Instance.OpenChest(this);
     }
 
     public void OpenChest()
@@ -30,7 +31,7 @@ public class Chest : MonoBehaviour, IInteractable
         
         // On ouvre via le manager modulaire (ou directement le canvas)
         if (uiManager != null) 
-            uiManager.Open(this);
+            ChestUI.Instance.OpenChest(this);
         else if (chestCanvas != null)
             chestCanvas.SetActive(true);
         
@@ -44,7 +45,7 @@ public class Chest : MonoBehaviour, IInteractable
         isOpen = false;
         
         if (uiManager != null) 
-            uiManager.Close();
+            ChestUI.Instance.CloseChest();
         else if (chestCanvas != null)
             chestCanvas.SetActive(false);
         
