@@ -22,6 +22,7 @@ MonoBehaviour:
   walkSpeed: 6
   rollSpeed: 15
   jumpHeight: 1.5
+  Jumpcount: 2
   gravity: -9.81
   rollDuration: 0.5
   rollDistance: 5

@@ -17,6 +17,7 @@ public class PlayerProfileSO : ScriptableObject
     public float walkSpeed = 6f;
     public float rollSpeed = 15f;
     public float jumpHeight = 1.5f;
+    public float Jumpcount = 1;
     public float gravity = -9.81f;
 
     [Header("Roulade")]

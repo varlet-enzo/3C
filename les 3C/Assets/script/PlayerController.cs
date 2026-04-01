@@ -30,6 +30,11 @@ public class PlayerController : MonoBehaviour
     public float playerAlignSpeed = 8f;
     private float lastMoveTime;
 
+    [Header("Saut")]
+    [Tooltip("Nombre maximum de sauts consecutifs (1 = saut simple, 2 = double saut)")]
+    public int maxJumpCount = 1;
+    private int jumpsRemaining;
+
     // Variables de mouvement synchronisées
     private float moveSpeed = 6f;
     private float sprintSpeed = 10f;
@@ -73,6 +78,7 @@ public class PlayerController : MonoBehaviour
         animator = GetComponent<Animator>();
         lastLookTime = Time.time;
         lastMoveTime = Time.time;
+        jumpsRemaining = Mathf.Max(1, maxJumpCount);
 
         if (profile != null) ApplyProfile();
         if (Camera.main != null) cam = Camera.main.transform;
@@ -111,6 +117,7 @@ public class PlayerController : MonoBehaviour
         walkSpeed = profile.walkSpeed;
         gravity = profile.gravity;
         jumpHeight = profile.jumpHeight;
+        maxJumpCount = Mathf.Max(1, Mathf.RoundToInt(profile.Jumpcount));
         rollDuration = profile.rollDuration;
         rollDistance = profile.rollDistance;
         rollCooldown = profile.rollCooldown;
@@ -140,7 +147,11 @@ public class PlayerController : MonoBehaviour
 
     public void OnJump(InputAction.CallbackContext context)
     {
-        if (context.started && isGrounded) Jump();
+        if (!context.started) return;
+        if (jumpsRemaining <= 0) return;
+
+        Jump();
+        jumpsRemaining--;
     }
 
     public void OnSprint(InputAction.CallbackContext context)
@@ -189,6 +200,7 @@ public class PlayerController : MonoBehaviour
         if (Time.timeScale == 0f || controller == null || !controller.enabled) return;
 
         isGrounded = controller.isGrounded;
+        if (isGrounded) jumpsRemaining = Mathf.Max(1, maxJumpCount);
 
         if (rollCooldownTimer > 0f) rollCooldownTimer -= Time.deltaTime;
 

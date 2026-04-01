@@ -790,6 +790,7 @@ MonoBehaviour:
   resetSmoothSpeed: 3
   playerAlignDelay: 1
   playerAlignSpeed: 8
+  maxJumpCount: 1
 --- !u!143 &1145229826
 CharacterController:
   m_ObjectHideFlags: 0
@@ -1333,6 +1334,7 @@ GameObject:
   - component: {fileID: 1254113331}
   - component: {fileID: 1254113330}
   - component: {fileID: 1254113334}
+  - component: {fileID: 1254113335}
   m_Layer: 0
   m_Name: Chest_UI_Canvas
   m_TagString: Untagged
@@ -1435,6 +1437,21 @@ CanvasGroup:
   m_Interactable: 1
   m_BlocksRaycasts: 1
   m_IgnoreParentGroups: 0
+--- !u!114 &1254113335
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1254113328}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6993e5b5c9ccc35428073ddb5a37aa40, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ChestUI
+  slotPrefab: {fileID: 5270307004824227529, guid: 6f80232785d7b2044997f17b5fc2a944, type: 3}
+  container: {fileID: 734933967}
+  uiPanel: {fileID: 1281314017}
 --- !u!1 &1281314017
 GameObject:
   m_ObjectHideFlags: 0
@@ -1448,7 +1465,6 @@ GameObject:
   - component: {fileID: 1281314019}
   - component: {fileID: 1281314022}
   - component: {fileID: 1281314021}
-  - component: {fileID: 1281314023}
   m_Layer: 0
   m_Name: Inventory_Panel
   m_TagString: Untagged
@@ -1540,21 +1556,6 @@ CanvasGroup:
   m_Interactable: 1
   m_BlocksRaycasts: 1
   m_IgnoreParentGroups: 0
---- !u!114 &1281314023
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1281314017}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 6993e5b5c9ccc35428073ddb5a37aa40, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::ChestUI
-  slotPrefab: {fileID: 5270307004824227529, guid: 6f80232785d7b2044997f17b5fc2a944, type: 3}
-  container: {fileID: 734933967}
-  uiPanel: {fileID: 1281314017}
 --- !u!1 &1375598504
 GameObject:
   m_ObjectHideFlags: 0
@@ -1852,7 +1853,7 @@ MonoBehaviour:
   chestCanvas: {fileID: 1281314017}
   popupUI: {fileID: 613252136}
   itemsGrid: {fileID: 734933967}
-  uiManager: {fileID: 1281314023}
+  uiManager: {fileID: 0}
 --- !u!1 &1820621129
 GameObject:
   m_ObjectHideFlags: 0
