@@ -28,6 +28,13 @@ public class ThirdPersonCamera : MonoBehaviour
     public Vector3 PlanarForward => Quaternion.Euler(0f, rotX, 0f) * Vector3.forward;
     public Vector3 PlanarRight => Quaternion.Euler(0f, rotX, 0f) * Vector3.right;
 
+    public void AlignYawToTarget(float speed)
+    {
+        if (target == null) return;
+
+        rotX = Mathf.LerpAngle(rotX, target.eulerAngles.y, Time.deltaTime * speed);
+    }
+
     void OnEnable() { SceneManager.sceneLoaded += OnSceneLoaded; }
     void OnDisable() { SceneManager.sceneLoaded -= OnSceneLoaded; }
 
@@ -132,11 +139,7 @@ public class ThirdPersonCamera : MonoBehaviour
 
         if (isMovingForward && !isStrafing && Time.time - lastInputTime > alignDelay)
         {
-            // On récupère l'angle actuel du joueur
-            float targetRotationY = target.eulerAngles.y;
-            
-            // On lisse la rotation de la caméra vers celle du joueur (Lerp)
-            rotX = Mathf.LerpAngle(rotX, targetRotationY, Time.deltaTime * alignSpeed);
+            AlignYawToTarget(alignSpeed);
         }
     }
 

@@ -233,22 +233,22 @@ public class PlayerController : MonoBehaviour
         if (Time.time - lastMoveTime < playerAlignDelay) return;
         if (isRolling) return;
 
-        Vector3 alignForward;
         if (thirdPersonCamera != null)
         {
-            alignForward = thirdPersonCamera.PlanarForward;
+            thirdPersonCamera.AlignYawToTarget(playerAlignSpeed);
+            return;
         }
         else
         {
             Transform reference = GetMovementReference();
-            alignForward = Vector3.ProjectOnPlane(reference.forward, Vector3.up);
+            Vector3 alignForward = Vector3.ProjectOnPlane(reference.forward, Vector3.up);
+
+            if (alignForward.sqrMagnitude < 0.001f) return;
+
+            float targetAngle = Mathf.Atan2(alignForward.x, alignForward.z) * Mathf.Rad2Deg;
+            Quaternion targetRotation = Quaternion.Euler(0f, targetAngle, 0f);
+            transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, playerAlignSpeed * Time.deltaTime);
         }
-
-        if (alignForward.sqrMagnitude < 0.001f) return;
-
-        float targetAngle = Mathf.Atan2(alignForward.x, alignForward.z) * Mathf.Rad2Deg;
-        Quaternion targetRotation = Quaternion.Euler(0f, targetAngle, 0f);
-        transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, playerAlignSpeed * Time.deltaTime);
     }
 
     void ApplyLook()
